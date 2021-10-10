@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:10-alpine
+    restart: unless-stopped
+    container_name: user_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: user_db, user_db_test
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    networks:
+      - tha-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    container_name: user_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "valverde.thiago@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "CloudBeds!2021"
+    ports:
+      - "8082:80"
+    depends_on:
+      - postgres
+    networks:
+      - tha-network
+
+volumes:
+    db_data:
+
+networks:
+  tha-network:
+      driver: bridge

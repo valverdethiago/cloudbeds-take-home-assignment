@@ -1,0 +1,13 @@
+## default connection pool
+spring:
+  flyway:
+    locations: classpath:db/migration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/user_db
+    username: postgres
+    password: postgres
+    hikari:
+      connectionTimeout: 20000
+      maximumPoolSize: 5
+
+#spring.jpa.hibernate.ddl-auto=create

@@ -1,0 +1,29 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" >
+    <modelVersion>4.0.0</modelVersion>
+ 
+    <groupId>com.clodbeds</groupId>
+    <artifactId>take-home-assignment</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+ 
+    <name>Cloudbeds Take Home Assignemt</name>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.5.5</version>
+		<relativePath/>
+	</parent>
+ 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
+        <flyway-core.version>8.0.0</flyway-core.version>
+    </properties>
+
+    <modules>
+        <module>user-api</module>
+    </modules>
+ 
+</project>
