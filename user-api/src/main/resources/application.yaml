@@ -9,5 +9,15 @@ spring:
     hikari:
       connectionTimeout: 20000
       maximumPoolSize: 5
+  kafka:
+    producer:
+      bootstrap-servers: 127.0.0.1:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      group-id: group_id
+
+app:
+  topic:
+    users: USERS_CREATION
 
 #spring.jpa.hibernate.ddl-auto=create

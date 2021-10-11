@@ -19,11 +19,12 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
-        <flyway-core.version>8.0.0</flyway-core.version>
+        <spring-kafka-version>2.7.7</spring-kafka-version>
     </properties>
 
     <modules>
         <module>user-api</module>
+        <module>user-consumer</module>
     </modules>
  
 </project>

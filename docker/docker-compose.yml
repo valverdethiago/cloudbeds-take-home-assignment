@@ -27,9 +27,95 @@ services:
       - postgres
     networks:
       - tha-network
+  zoo:
+    image: zookeeper:3.4.9
+    restart: unless-stopped
+    hostname: zoo
+    container_name: zoo
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo:2888:3888
+    volumes:
+      - zoo-data-volume:/data
+      - zoo-datalog-volume:/datalog
+    networks:
+      - tha-network
+
+  kafka:
+    image: confluentinc/cp-kafka:5.3.1
+    restart: unless-stopped
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka:19092,LISTENER_DOCKER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zoo:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-volume:/var/lib/kafka/data
+    depends_on:
+      - zoo
+    networks:
+      - tha-network
+
+  # This "container" is a workaround to pre-create topics
+  kafka-setup:
+    image: confluentinc/cp-kafka:5.3.1
+    hostname: kafka-setup
+    container_name: kafka-setup
+    depends_on:
+      - kafka
+      - zoo
+    volumes:
+      - kafka-setup-connectors-volume:/tmp/connectors
+      - kafka-setup-dashboard-volume:/tmp/dashboard
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b kafka:19092 1 20 && \
+                       kafka-topics --create --if-not-exists --zookeeper zoo:2181 --partitions 1 --replication-factor 1 --topic USERS_CREATION  '"
+    environment:
+      # The following settings are listed here only to satisfy the image's requirements.
+      # We override the image's `command` anyways, hence this container will not start a broker.
+      KAFKA_BROKER_ID: ignored
+      KAFKA_ZOOKEEPER_CONNECT: ignored
+    networks:
+      - tha-network
+
+  kafka-ui:
+    image: obsidiandynamics/kafdrop
+    restart: unless-stopped
+    hostname: kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:19092
+    depends_on:
+      - kafka
+      - zoo
+    networks:
+      - tha-network
 
 volumes:
-    db_data:
+  kafka-volume:
+    external: false
+  zoo-data-volume:
+    external: false
+  zoo-datalog-volume:
+    external: false
+  kafka-setup-connectors-volume:
+    external: false
+  kafka-setup-dashboard-volume:
+    external: false
+  db_data:
+    external: false
 
 networks:
   tha-network:

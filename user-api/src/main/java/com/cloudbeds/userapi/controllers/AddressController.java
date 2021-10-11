@@ -1,11 +1,8 @@
 package com.cloudbeds.userapi.controllers;
 
-import com.cloudbeds.userapi.exceptions.EntityNotFoundException;
 import com.cloudbeds.userapi.model.Address;
-import com.cloudbeds.userapi.model.User;
 import com.cloudbeds.userapi.repository.AddressRepository;
-import com.cloudbeds.userapi.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,10 +17,10 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/address")
+@RequiredArgsConstructor
 public class AddressController {
 
-    @Autowired
-    private AddressRepository addressRepository;
+    private final AddressRepository addressRepository;
 
     @GetMapping
     public List<Address> listAddresses() {

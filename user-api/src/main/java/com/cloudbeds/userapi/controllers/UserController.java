@@ -1,11 +1,13 @@
 package com.cloudbeds.userapi.controllers;
 
 import com.cloudbeds.userapi.exceptions.EntityNotFoundException;
-import com.cloudbeds.userapi.model.Address;
 import com.cloudbeds.userapi.model.User;
 import com.cloudbeds.userapi.repository.AddressRepository;
 import com.cloudbeds.userapi.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.cloudbeds.userapi.service.UserService;
+import com.cloudbeds.userapi.service.impl.UserServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,12 +22,12 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private AddressRepository addressRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
+    private final AddressRepository addressRepository;
 
     @GetMapping
     public List<User> listUsers() {
@@ -52,8 +54,8 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User newUser) {
-        return userRepository.save(newUser);
+    public User createUser(@RequestBody User newUser) throws JsonProcessingException {
+        return userService.createUser(newUser);
     }
 
     @DeleteMapping("/{id}")
@@ -63,8 +65,8 @@ public class UserController {
 
     @PutMapping("/{id}/attachAddress/{addressId}")
     public void attachUserToAddress(@PathVariable Long id, @PathVariable Long addressId) {
-        Address address = addressRepository.findById(addressId).orElseThrow(() -> new EntityNotFoundException());
-        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        addressRepository.findById(addressId).orElseThrow(() -> new EntityNotFoundException());
+        userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
         userRepository.attachAddressToUser(id, addressId);
     }
 
