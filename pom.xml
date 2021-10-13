@@ -19,7 +19,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>11</java.version>
-        <spring-kafka-version>2.7.7</spring-kafka-version>
+        <spring-kafka.version>2.7.7</spring-kafka.version>
+        <mockito-junit-jupiter.version>3.2.4</mockito-junit-jupiter.version>
+        <javafaker.version>1.0.2</javafaker.version>
     </properties>
 
     <modules>

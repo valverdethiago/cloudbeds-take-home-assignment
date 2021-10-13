@@ -1,5 +1,6 @@
 package com.cloudbeds.userapi.model;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.CascadeType;
@@ -18,6 +19,7 @@ import java.util.*;
 @Data
 @Entity
 @Table(name = "users")
+@Builder
 public class User {
 
     @Id

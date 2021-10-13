@@ -26,6 +26,5 @@ public class UserServiceImpl implements UserService {
         String json = objectMapper.writeValueAsString(dbUser);
         kafkaTemplate.send(topicName, json);
         return dbUser;
-
     }
 }

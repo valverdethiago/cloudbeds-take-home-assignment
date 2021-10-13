@@ -1,5 +1,6 @@
 package com.cloudbeds.userapi.model;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.Column;
@@ -12,6 +13,7 @@ import javax.persistence.Table;
 @Entity
 @Data
 @Table(name = "addresses")
+@Builder
 public class Address {
 
     @Id

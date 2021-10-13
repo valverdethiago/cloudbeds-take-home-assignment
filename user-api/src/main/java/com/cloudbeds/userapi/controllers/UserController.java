@@ -35,8 +35,10 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public List<User> getUser(@PathVariable Long id) {
-        return userRepository.findAll();
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
+        return userRepository.findById(id)
+            .map(user -> ResponseEntity.ok(user))
+            .orElseGet(()-> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
