@@ -26,14 +26,13 @@ public class TestHelper {
             .lastName(faker.name().lastName())
             .email(faker.internet().emailAddress())
             .password(faker.internet().password())
-            .addresses(buildFakeAddressSetForUser())
+            .addresses(new HashSet<>(buildFakeAddressList(10)))
             .build();
     }
 
-    public static Set<Address> buildFakeAddressSetForUser() {
-        int addressCount = new Random().nextInt(10);
-        Set<Address> result = new HashSet<>();
-        for (int i=0; i<addressCount; i++) {
+    public static List<Address> buildFakeAddressList(int size) {
+        List<Address> result = new ArrayList<>();
+        for (int i=0; i<size; i++) {
             result.add(buildFakeAddress());
         }
         return result;

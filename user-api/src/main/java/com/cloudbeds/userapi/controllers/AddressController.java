@@ -1,5 +1,6 @@
 package com.cloudbeds.userapi.controllers;
 
+import com.cloudbeds.userapi.exceptions.EntityNotFoundException;
 import com.cloudbeds.userapi.model.Address;
 import com.cloudbeds.userapi.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +24,19 @@ public class AddressController {
     private final AddressRepository addressRepository;
 
     @GetMapping
-    public List<Address> listAddresses() {
-        return addressRepository.findAll();
+    public ResponseEntity<List<Address>> listAddresses() {
+        List<Address> addresses = addressRepository.findAll();
+        if(addresses == null || addresses.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(addresses);
     }
 
     @GetMapping("/{id}")
-    public List<Address> getAddress(@PathVariable Long id) {
-        return addressRepository.findAll();
+    public ResponseEntity<Address> getAddress(@PathVariable Long id) {
+        return addressRepository.findById(id)
+            .map(address -> ResponseEntity.ok(address))
+            .orElseGet(()-> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
@@ -48,13 +55,25 @@ public class AddressController {
     }
 
     @PostMapping
-    public Address createAddress(@RequestBody Address newAddress) {
-        return addressRepository.save(newAddress);
+    public ResponseEntity<Address> createAddress(@RequestBody Address newAddress) {
+        try {
+            return ResponseEntity.ok(addressRepository.save(newAddress));
+        }
+        catch (Exception ex) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAddress(@PathVariable Long id) {
-        addressRepository.deleteById(id);
+    public ResponseEntity deleteAddress(@PathVariable Long id) {
+        Address address = addressRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        try {
+            addressRepository.delete(address);
+            return ResponseEntity.ok().build();
+        }
+        catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(ex.getMessage());
+        }
     }
 
 }

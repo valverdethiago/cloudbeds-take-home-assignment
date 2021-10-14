@@ -5,7 +5,6 @@ import com.cloudbeds.userapi.model.User;
 import com.cloudbeds.userapi.repository.AddressRepository;
 import com.cloudbeds.userapi.repository.UserRepository;
 import com.cloudbeds.userapi.service.UserService;
-import com.cloudbeds.userapi.service.impl.UserServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,8 +29,12 @@ public class UserController {
     private final AddressRepository addressRepository;
 
     @GetMapping
-    public List<User> listUsers() {
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> listUsers() {
+        List<User> users = userRepository.findAll();
+        if(users == null || users.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
@@ -56,13 +59,25 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User newUser) throws JsonProcessingException {
-        return userService.createUser(newUser);
+    public ResponseEntity<User> createUser(@RequestBody User newUser)  {
+        try {
+            return ResponseEntity.ok(userService.createUser(newUser));
+        }
+        catch (Exception ex) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
-        userRepository.deleteById(id);
+    public ResponseEntity deleteUser(@PathVariable Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        try {
+            userRepository.delete(user);
+            return ResponseEntity.ok().build();
+        }
+        catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(ex.getMessage());
+        }
     }
 
     @PutMapping("/{id}/attachAddress/{addressId}")
@@ -73,7 +88,11 @@ public class UserController {
     }
 
     @GetMapping("searchByCountry/{country}")
-    public List<User> findUsersByCountry(@PathVariable String country) {
-        return userRepository.findByCountry(country);
+    public ResponseEntity<List<User>> findUsersByCountry(@PathVariable String country) {
+        List<User> users = userRepository.findByCountry(country);
+        if(users == null || users.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(users);
     }
 }
