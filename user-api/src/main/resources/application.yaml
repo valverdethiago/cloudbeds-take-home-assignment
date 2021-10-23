@@ -3,21 +3,19 @@ spring:
   flyway:
     locations: classpath:db/migration
   datasource:
-    url: jdbc:postgresql://localhost:5432/user_db
-    username: postgres
-    password: postgres
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/user_db}
+    username: ${POSGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
     hikari:
       connectionTimeout: 20000
       maximumPoolSize: 5
   kafka:
     producer:
-      bootstrap-servers: 127.0.0.1:9092
+      bootstrap-servers: ${KAFKA_URL:127.0.0.1:9092}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      group-id: group_id
+      group-id: ${KAFKA_GROUP_ID:group_id}
 
 app:
   topic:
-    users: USERS_CREATION
-
-#spring.jpa.hibernate.ddl-auto=create
+    users: ${KAFKA_TOPIC:USERS_CREATION}
