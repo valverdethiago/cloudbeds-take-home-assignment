@@ -23,6 +23,8 @@
         <mockito-junit-jupiter.version>3.2.4</mockito-junit-jupiter.version>
         <javafaker.version>1.0.2</javafaker.version>
         <springdoc-openapi-ui.version>1.2.32</springdoc-openapi-ui.version>
+        <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
+        <jacoco-maven-plugin.version>0.8.7</jacoco-maven-plugin.version>
     </properties>
 
     <modules>
