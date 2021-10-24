@@ -1,53 +1,155 @@
 services:
-  mongo:
-    image: mongo
-    container_name: mongo
-    hostname: mongo
+  postgres:
+    image: postgres:10-alpine
     restart: unless-stopped
+    container_name: demo_user_db
     ports:
-      - "27017:27017"
+      - '5432:5432'
+    volumes:
+      - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
     environment:
-      MONGO_INITDB_DATABASE: agenda
-      MONGODB_DATABASE: agenda
-    volumes: 
-      - db_data:/data/db
+      POSTGRES_MULTIPLE_DATABASES: user_db, user_db_test
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
     networks:
-      - agenda-network
+      - demo-tha-network
 
-  mongoexpress:
-    image: mongo-express
-    container_name: mongo-express
-    hostname: mongo-express
+  pgadmin:
+    image: dpage/pgadmin4
     restart: unless-stopped
+    container_name: demo_user_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "valverde.thiago@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "CloudBeds!2021"
     ports:
-      - "8888:8081"
-    links:
-      - mongo
+      - "8082:80"
+    depends_on:
+      - postgres
     networks:
-      - agenda-network
-  backend: 
-    container_name: agenda-backend
-    hostname: agenda-backend
+      - demo-tha-network
+  zoo:
+    image: zookeeper:3.4.9
     restart: unless-stopped
-    build: 
-      context: ../
-      dockerfile: ./docker/Dockerfile
-    environment:  
-      DB_SERVER: mongo
-      DB_NAME: agenda
-      SERVER_ADDRESS: 0.0.0.0:8081
-      PROMETHEUS_SERVER: http://prometheus:9090/
+    hostname: demo_zoo
+    container_name: demo_zoo
     ports:
-      - 8081:8081
-    links:
-      - mongo
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=demo_zoo:2888:3888
+    volumes:
+      - demo-zoo-data-volume:/data
+      - demo-zoo-datalog-volume:/datalog
     networks:
-      - agenda-network
+      - demo-tha-network
 
+  kafka:
+    image: confluentinc/cp-kafka:5.3.1
+    restart: unless-stopped
+    hostname: demo_kafka
+    container_name: demo_kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://demo_kafka:19092,LISTENER_DOCKER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "demo_zoo:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - demo-kafka-volume:/var/lib/kafka/data
+    depends_on:
+      - zoo
+    networks:
+      - demo-tha-network
+
+  # This "container" is a workaround to pre-create topics
+  kafka-setup:
+    image: confluentinc/cp-kafka:5.3.1
+    hostname: demo_kafka-setup
+    container_name: demo_kafka-setup
+    depends_on:
+      - kafka
+      - zoo
+    volumes:
+      - demo-kafka-setup-connectors-volume:/tmp/connectors
+      - demo-kafka-setup-dashboard-volume:/tmp/dashboard
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b kafka:19092 1 20 && \
+                       kafka-topics --create --if-not-exists --zookeeper demo_zoo:2181 --partitions 1 --replication-factor 1 --topic USERS_CREATION  '"
+    environment:
+      # The following settings are listed here only to satisfy the image's requirements.
+      # We override the image's `command` anyways, hence this container will not start a broker.
+      KAFKA_BROKER_ID: ignored
+      KAFKA_ZOOKEEPER_CONNECT: ignored
+    networks:
+      - demo-tha-network
+
+  kafka-ui:
+    image: obsidiandynamics/kafdrop
+    restart: unless-stopped
+    hostname: kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: demo_kafka:19092
+    depends_on:
+      - kafka
+      - zoo
+    networks:
+      - demo-tha-network
+
+  api:
+    container_name: demo_user-api
+    hostname: demo_api
+    build:
+      context: ../user-api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://demo_user_db:5432/user_db
+      KAFKA_URL: kafka:19092
+    depends_on:
+      - zoo
+      - postgres
+      - kafka
+    networks:
+      - demo-tha-network
+
+  consumer:
+    container_name: user-consumer
+    hostname: consumer
+    build:
+      context: ../user-consumer
+      dockerfile: Dockerfile
+    environment:
+      KAFKA_URL: kafka:19092
+    depends_on:
+      - zoo
+      - postgres
+      - kafka
+    networks:
+      - demo-tha-network
 
 volumes:
-    db_data:
+  demo-kafka-volume:
+    external: false
+  demo-zoo-data-volume:
+    external: false
+  demo-zoo-datalog-volume:
+    external: false
+  demo-kafka-setup-connectors-volume:
+    external: false
+  demo-kafka-setup-dashboard-volume:
+    external: false
+  demo-db_data-volume:
+    external: false
 
-networks: 
-    agenda-network:
-      driver: bridge
+networks:
+  demo-tha-network:
+    driver: bridge
