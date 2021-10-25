@@ -90,6 +90,7 @@
 				<configuration>
 					<excludes>
 						<exclude>**/**/UserApiApplication.*</exclude>
+						<exclude>com/cloudbeds/userapi/model/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

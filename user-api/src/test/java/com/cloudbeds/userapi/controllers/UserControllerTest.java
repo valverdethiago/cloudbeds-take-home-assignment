@@ -20,9 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
-import static com.cloudbeds.userapi.util.TestHelper.buildFakeAddress;
-import static com.cloudbeds.userapi.util.TestHelper.buildFakeUser;
-import static com.cloudbeds.userapi.util.TestHelper.buildFakeUserList;
+import static com.cloudbeds.userapi.util.TestHelper.*;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -71,6 +69,7 @@ public class UserControllerTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$", hasSize(10)));
     }
+
     @Test
     @DisplayName("GET /user success")
     public void shouldReturnNoContentWhenNoUsersAreFound() throws Exception {
@@ -114,6 +113,51 @@ public class UserControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /user success")
+    public void shouldUpdateAndReturnUser() throws Exception {
+        //Arrange
+        User user = buildFakeUser();
+        doReturn(Optional.of(user)).when(userRepository).findById(user.getId());
+        updateFakeUser(user);
+        doReturn(user).when(userRepository).save(user);
+        // Act
+        mockMvc.perform(put("/user/{id}", user.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(user)))
+            // Assert
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("PUT /user invalid id")
+    public void shouldReturnNoContentWhenUpdatingAUser() throws Exception {
+        //Arrange
+        User user = buildFakeUser();
+        doReturn(Optional.empty()).when(userRepository).findById(user.getId());
+        doReturn(user).when(userRepository).save(user);
+        // Act
+        mockMvc.perform(put("/user/{id}", user.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(user)))
+            // Assert
+            .andExpect(status().isNotFound());
+    }
+    @Test
+    @DisplayName("PUT /user error")
+    public void shouldReturnInternalErrorWhenDatabaseErrorOccursOnUpdate() throws Exception {
+        //Arrange
+        User user = buildFakeUser();
+        doReturn(Optional.of(user)).when(userRepository).findById(user.getId());
+        doThrow(new QueryTimeoutException("Timeout")).when(userRepository).save(user);
+        //Act
+        mockMvc.perform(put("/user/{id}", user.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(user)))
+            //Assert
+            .andExpect(status().is5xxServerError());
+    }
+
+    @Test
     @DisplayName("POST /user success")
     public void shouldCreateAndReturnUser() throws Exception {
         //Arrange
@@ -134,6 +178,7 @@ public class UserControllerTest {
             .andExpect(jsonPath("addresses", hasSize(user.getAddresses().size())));
         verify(kafkaTemplate).send(topicName, objectMapper.writeValueAsString(user));
     }
+
     @Test
     @DisplayName("POST /user error")
     public void shouldReturnInternalErrorWhenDatabaseErrorOccurs() throws Exception {

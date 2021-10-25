@@ -30,6 +30,14 @@ public class TestHelper {
             .build();
     }
 
+    public static User updateFakeUser(User original) {
+        original.setFirstName(faker.name().firstName());
+        original.setLastName(faker.name().lastName());
+        original.setEmail(faker.internet().emailAddress());
+        original.setPassword(faker.internet().password());
+        return original;
+    }
+
     public static List<Address> buildFakeAddressList(int size) {
         List<Address> result = new ArrayList<>();
         for (int i=0; i<size; i++) {
@@ -48,5 +56,15 @@ public class TestHelper {
             .country(faker.address().country())
             .zip(faker.address().zipCode())
             .build();
+    }
+
+    public static Address updateFakeAddress(Address original) {
+        original.setAddress1(faker.address().streetAddress());
+        original.setAddress2(faker.address().secondaryAddress());
+        original.setCity(faker.address().city());
+        original.setState(faker.address().state());
+        original.setCountry(faker.address().country());
+        original.setZip(faker.address().zipCode());
+        return original;
     }
 }

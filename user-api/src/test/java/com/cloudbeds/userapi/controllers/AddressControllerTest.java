@@ -1,6 +1,7 @@
 package com.cloudbeds.userapi.controllers;
 
 import com.cloudbeds.userapi.model.Address;
+import com.cloudbeds.userapi.model.User;
 import com.cloudbeds.userapi.repository.AddressRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,8 @@ import java.util.*;
 
 import static com.cloudbeds.userapi.util.TestHelper.buildFakeAddress;
 import static com.cloudbeds.userapi.util.TestHelper.buildFakeAddressList;
+import static com.cloudbeds.userapi.util.TestHelper.buildFakeUser;
+import static com.cloudbeds.userapi.util.TestHelper.updateFakeAddress;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,8 +39,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class AddressControllerTest {
 
-    @Value("${app.topic.users}")
-    private String topicName;
     @MockBean
     private AddressRepository addressRepository;
     @Autowired
@@ -69,7 +71,7 @@ public class AddressControllerTest {
     }
 
     @Test
-    @DisplayName("GET /user/${id} success")
+    @DisplayName("GET /address/${id} success")
     public void shouldReturnTheAddress() throws Exception {
         //Arrange
         Address address = buildFakeAddress();
@@ -100,8 +102,53 @@ public class AddressControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /address success")
+    public void shouldUpdateAndReturnUser() throws Exception {
+        //Arrange
+        Address address = buildFakeAddress();
+        doReturn(Optional.of(address)).when(addressRepository).findById(address.getId());
+        updateFakeAddress(address);
+        doReturn(address).when(addressRepository).save(address);
+        // Act
+        mockMvc.perform(put("/address/{id}", address.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(address)))
+            // Assert
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("PUT /address invalid id")
+    public void shouldReturnNoContentWhenUpdatingAAddress() throws Exception {
+        //Arrange
+        Address address = buildFakeAddress();
+        doReturn(Optional.empty()).when(addressRepository).findById(address.getId());
+        doReturn(address).when(addressRepository).save(address);
+        // Act
+        mockMvc.perform(put("/address/{id}", address.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(address)))
+            // Assert
+            .andExpect(status().isNotFound());
+    }
+    @Test
+    @DisplayName("PUT /address error")
+    public void shouldReturnInternalErrorWhenDatabaseErrorOccursOnUpdate() throws Exception {
+        //Arrange
+        Address address = buildFakeAddress();
+        doReturn(Optional.of(address)).when(addressRepository).findById(address.getId());
+        doThrow(new QueryTimeoutException("Timeout")).when(addressRepository).save(address);
+        //Act
+        mockMvc.perform(put("/address/{id}", address.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(address)))
+            //Assert
+            .andExpect(status().is5xxServerError());
+    }
+
+    @Test
     @DisplayName("POST /address success")
-    public void shouldCreateAndReturnUser() throws Exception {
+    public void shouldCreateAndReturnAddress() throws Exception {
         //Arrange
         Address address = buildFakeAddress();
         doReturn(address).when(addressRepository).save(address);

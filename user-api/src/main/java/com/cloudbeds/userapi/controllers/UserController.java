@@ -5,7 +5,6 @@ import com.cloudbeds.userapi.model.User;
 import com.cloudbeds.userapi.repository.AddressRepository;
 import com.cloudbeds.userapi.repository.UserRepository;
 import com.cloudbeds.userapi.service.UserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,7 +44,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> replaceUser(@PathVariable Long id, @RequestBody User newUser) {
+    public ResponseEntity<?> replaceUser(@PathVariable Long id, @RequestBody User newUser) {
         return userRepository.findById(id)
             .map(user -> {
                 user.setEmail(newUser.getEmail());
@@ -53,7 +52,12 @@ public class UserController {
                 user.setPassword(newUser.getPassword());
                 user.setLastName(newUser.getLastName());
                 user.setAddresses(newUser.getAddresses());
-                return ResponseEntity.ok(userRepository.save(user));
+                try {
+                    return ResponseEntity.ok(userRepository.save(user));
+                }
+                catch (Exception ex) {
+                    return ResponseEntity.internalServerError().build();
+                }
             })
             .orElseGet(()-> ResponseEntity.notFound().build());
     }

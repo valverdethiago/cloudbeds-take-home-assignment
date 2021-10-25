@@ -40,7 +40,7 @@ public class AddressController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Address> replaceAddress(@PathVariable Long id, @RequestBody Address newAddress) {
+    public ResponseEntity<?> replaceAddress(@PathVariable Long id, @RequestBody Address newAddress) {
         return addressRepository.findById(id)
             .map(address -> {
                 address.setAddress1(newAddress.getAddress1());
@@ -49,7 +49,12 @@ public class AddressController {
                 address.setCountry(newAddress.getCountry());
                 address.setState(newAddress.getState());
                 address.setZip(newAddress.getZip());
-                return ResponseEntity.ok(addressRepository.save(address));
+                try {
+                    return ResponseEntity.ok(addressRepository.save(address));
+                }
+                catch (Exception ex) {
+                    return ResponseEntity.internalServerError().build();
+                }
             })
             .orElseGet(()-> ResponseEntity.notFound().build());
     }
