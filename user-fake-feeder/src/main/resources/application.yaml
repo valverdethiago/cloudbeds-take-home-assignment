@@ -1,0 +1,5 @@
+server:
+  port : 8081
+app:
+  server:
+    url: ${SERVER_URL:http://localhost:8080/user}

@@ -21,4 +21,8 @@ run-consumer:
 	cd user-consumer;\
 	mvn spring-boot:run
 
-.PHONY: dev-start dev-stop stack-start stack-stop build run-api run-consumer
+run-feeder:
+	cd user-fake-feeder;\
+	mvn spring-boot:run
+
+.PHONY: dev-start dev-stop stack-start stack-stop build run-api run-consumer run-feeder
