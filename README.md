@@ -27,6 +27,7 @@ Presentation (schedule later):
 To accomplish the goals described on the assignment a spring application was built with 2 main modules:
 * user-api - The main module containing all the logic to receive the HTTP requests, persist them into the database and also send them to the kafkfa topic
 * user-consumer - Simple spring-boot application that contains a subscriber for that topic on kafka and print the users being sent to the topic.
+* user-fake-feeder - Simple spring-boot-application that generates fake and random user data to send to the API
 
 # Development environment 
 
@@ -37,7 +38,8 @@ To be able to run the dev environment locally without needing to install anythin
 * stack-stop - stops all containers from the task above
 * build - builds the entire application
 * run-api - starts the **user-api** module. **Important: the infrastructure containers must be up and running (from task dev-start)**
-* run-consumer - starts the **user-consumer** module. **Important: the infrastructure containers must be up and running (from task dev-start)**
+* run-consumer - starts the **user-consumer** module. 
+* run-feeder - starts a small client that generate fake data to send to the API
 
 Once the application is started you should be able to access its landing page on [http://localhost:8080](http://localhost:8080):
 
