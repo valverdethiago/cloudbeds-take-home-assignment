@@ -13,7 +13,7 @@ REST API requirements:
 Kafka Event requirements:
 * Publish user creation messages in a Kafka topic
 * Write a sample/test consumer to consume messages and print out user names.
-![Entity Diagram](./entity_diagram.png)
+![Entity Diagram](./img/entity_diagram.png)
 
 Deliverables:
 * API contract design
